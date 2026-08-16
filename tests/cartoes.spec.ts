@@ -67,4 +67,53 @@ test.describe('BancoPT Practice - Cartões', () => {
     // repõe o estado para não afetar outros testes que corram a seguir
     await cartoesPage.garantirEstado(CARTAO_DEBITO, 'ATIVO');
   });
+
+  test.describe('Ver dados completos', () => {
+    test('deve rejeitar um PIN incorreto', async ({ page }) => {
+      const cartoesPage = new CartoesPage(page);
+      await cartoesPage.verDadosButton(CARTAO_DEBITO).click();
+
+      const cartao = cartoesPage.cartao(CARTAO_DEBITO);
+      await cartao.getByTestId('cartao-dados-pin').fill('0000');
+      await cartao.getByTestId('cartao-dados-confirmar').click();
+
+      await expect(cartao.getByTestId('cartao-dados-mensagem')).toHaveText('PIN incorreto.');
+      await expect(cartao.getByTestId('cartao-dados-revelados')).toBeHidden();
+    });
+
+    test('deve mostrar número completo, validade e código de segurança com o PIN correto', async ({ page }) => {
+      const cartoesPage = new CartoesPage(page);
+      const cartao = cartoesPage.cartao(CARTAO_DEBITO);
+      await cartoesPage.verDadosButton(CARTAO_DEBITO).click();
+
+      await cartao.getByTestId('cartao-dados-pin').fill('1234');
+      await cartao.getByTestId('cartao-dados-confirmar').click();
+
+      await expect(cartao.getByTestId('cartao-dados-numero')).toHaveText(/^\d{4} \d{4} \d{4} 1001$/);
+      await expect(cartao.getByTestId('cartao-dados-validade')).toHaveText('12/29');
+      await expect(cartao.getByTestId('cartao-dados-cvv')).toHaveText(/^\d{3}$/);
+
+      // Esconder volta a mostrar só o botão, sem os dados.
+      await cartao.getByTestId('cartao-dados-ocultar').click();
+      await expect(cartao.getByTestId('cartao-dados-revelados')).toBeHidden();
+      await expect(cartoesPage.verDadosButton(CARTAO_DEBITO)).toBeVisible();
+    });
+  });
+
+  test('a listagem geral de cartões não deve expor o número completo nem o CVV', async ({ page, request }) => {
+    const loginResp = await request.post('http://localhost:4001/api/auth/login', {
+      data: { username: DEMO_USERNAME, password: DEMO_PASSWORD },
+    });
+    const { token } = await loginResp.json();
+
+    const cartoesResp = await request.get('http://localhost:4001/api/cartoes', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const { cartoes } = await cartoesResp.json();
+
+    for (const cartao of cartoes) {
+      expect(cartao).not.toHaveProperty('numeroCompleto');
+      expect(cartao).not.toHaveProperty('cvv');
+    }
+  });
 });

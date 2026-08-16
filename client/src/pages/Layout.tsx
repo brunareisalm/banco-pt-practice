@@ -11,6 +11,7 @@ export default function Layout() {
   const { dict } = useIdioma();
   const [menuAberto, setMenuAberto] = useState<MenuAberto>(null);
   const [grupoEstadoAberto, setGrupoEstadoAberto] = useState(false);
+  const [menuMobileAberto, setMenuMobileAberto] = useState(false);
 
   function handleLogout() {
     logout();
@@ -25,13 +26,23 @@ export default function Layout() {
   function fecharMenus() {
     setMenuAberto(null);
     setGrupoEstadoAberto(false);
+    setMenuMobileAberto(false);
   }
 
   return (
     <div className="app-shell">
       <header className="topbar">
         <span className="logo-small">🏦 BancoPT Practice</span>
-        <nav className="topnav">
+        <button
+          type="button"
+          className="menu-hamburguer"
+          data-testid="nav-menu-mobile-toggle"
+          aria-label={dict.nav.abrirMenu}
+          onClick={() => setMenuMobileAberto((atual) => !atual)}
+        >
+          {menuMobileAberto ? "✕" : "☰"}
+        </button>
+        <nav className={menuMobileAberto ? "topnav topnav--aberto" : "topnav"}>
           <NavLink to="/inicio" data-testid="nav-inicio" onClick={fecharMenus}>
             {dict.nav.inicio}
           </NavLink>

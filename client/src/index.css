@@ -222,6 +222,31 @@ button:disabled {
   box-shadow: 0 4px 20px rgba(16, 24, 60, 0.15);
 }
 
+.menu-hamburguer {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: none;
+  order: 1;
+}
+
+.menu-hamburguer:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: none;
+  box-shadow: none;
+}
+
 .topnav {
   display: flex;
   gap: 18px;
@@ -663,10 +688,39 @@ button:disabled {
   color: var(--cor-erro);
 }
 
-.cartao-card button {
+.cartao-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-top: 14px;
+}
+
+.cartao-acoes button {
+  margin-top: 0;
   padding: 9px 16px;
   font-size: 0.85rem;
+}
+
+.cartao-dados-form {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--cor-borda);
+  max-width: 220px;
+}
+
+.cartao-dados-form button {
+  padding: 9px 16px;
+  font-size: 0.85rem;
+}
+
+.cartao-dados-revelados {
+  margin: 14px 0 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--cor-borda);
+}
+
+.cartao-dados-revelados dd {
+  font-family: "SF Mono", "Roboto Mono", monospace;
 }
 
 /* Poupanças */
@@ -715,14 +769,68 @@ button:disabled {
   border-bottom: 1px solid var(--cor-borda);
 }
 
+/* Menu hambúrguer — a navegação principal tem demasiados itens (9 links +
+   3 dropdowns) para caber numa linha em ecrãs estreitos. Abaixo deste
+   ponto, escondemos a navegação e mostramos o botão de hambúrguer, que
+   revela a mesma navegação empilhada verticalmente por baixo da topbar. */
+
+@media (max-width: 900px) {
+  .menu-hamburguer {
+    display: inline-flex;
+    order: 1;
+  }
+
+  .user-area {
+    order: 2;
+  }
+
+  .topnav {
+    display: none;
+    order: 3;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 2px;
+    padding-top: 14px;
+    margin-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .topnav--aberto {
+    display: flex;
+  }
+
+  .topnav a,
+  .nav-dropdown,
+  .nav-dropdown-trigger {
+    width: 100%;
+  }
+
+  .topnav a,
+  .nav-dropdown-trigger {
+    padding: 12px 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0;
+    text-align: left;
+  }
+
+  .nav-dropdown-menu {
+    position: static;
+    box-shadow: none;
+    border: none;
+    width: 100%;
+    min-width: 0;
+    margin: 4px 0 8px 0;
+  }
+
+  .nav-dropdown-menu--right {
+    right: auto;
+  }
+}
+
 /* Mobile */
 
 @media (max-width: 480px) {
-  .topbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
   .conta-saldo {
     font-size: 1.2rem;
   }

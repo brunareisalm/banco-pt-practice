@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
+import type { Cartao } from "./db";
 import {
   users,
   contas,
@@ -540,9 +541,41 @@ app.post("/api/mbway/pagamentos", requireAuth, (req: AuthedRequest, res) => {
 // Cartões
 // -----------------------------------------------------------------------
 
+// O número completo e o CVV nunca vão em respostas normais — só o endpoint
+// /dados-completos (com PIN) é que os devolve.
+function cartaoPublico(cartao: Cartao) {
+  const { numeroCompleto: _numeroCompleto, cvv: _cvv, ...resto } = cartao;
+  return resto;
+}
+
 app.get("/api/cartoes", requireAuth, (req: AuthedRequest, res) => {
-  const meusCartoes = [...cartoes.values()].filter((c) => c.userId === req.userId);
+  const meusCartoes = [...cartoes.values()].filter((c) => c.userId === req.userId).map(cartaoPublico);
   res.json({ cartoes: meusCartoes });
+});
+
+app.post("/api/cartoes/:id/dados-completos", requireAuth, (req: AuthedRequest, res) => {
+  const { pin } = req.body ?? {};
+
+  if (!pin) {
+    return res.status(400).json({ error: "campos_obrigatorios", message: "pin é obrigatório" });
+  }
+
+  const utilizador = users.get(req.userId!);
+  if (!utilizador || pin !== utilizador.pin) {
+    return res.status(400).json({ error: "pin_invalido" });
+  }
+
+  const cartao = cartoes.get(req.params.id);
+  if (!cartao || cartao.userId !== req.userId) {
+    return res.status(404).json({ error: "cartao_nao_encontrado" });
+  }
+
+  res.json({
+    titular: cartao.titular,
+    numeroCompleto: cartao.numeroCompleto,
+    validade: cartao.validade,
+    cvv: cartao.cvv,
+  });
 });
 
 app.post("/api/cartoes/:id/bloquear", requireAuth, (req: AuthedRequest, res) => {
@@ -551,7 +584,7 @@ app.post("/api/cartoes/:id/bloquear", requireAuth, (req: AuthedRequest, res) => 
     return res.status(404).json({ error: "cartao_nao_encontrado" });
   }
   cartao.estado = "BLOQUEADO";
-  res.json({ cartao });
+  res.json({ cartao: cartaoPublico(cartao) });
 });
 
 app.post("/api/cartoes/:id/desbloquear", requireAuth, (req: AuthedRequest, res) => {
@@ -560,7 +593,7 @@ app.post("/api/cartoes/:id/desbloquear", requireAuth, (req: AuthedRequest, res) 
     return res.status(404).json({ error: "cartao_nao_encontrado" });
   }
   cartao.estado = "ATIVO";
-  res.json({ cartao });
+  res.json({ cartao: cartaoPublico(cartao) });
 });
 
 app.get("/api/cartoes/:id/movimentos", requireAuth, (req: AuthedRequest, res) => {
@@ -636,7 +669,7 @@ app.post("/api/cartoes/:id/aumentar-limite", requireAuth, (req: AuthedRequest, r
   }
 
   cartao.limite = novoLimite;
-  res.status(200).json({ status: "concluido", cartao });
+  res.status(200).json({ status: "concluido", cartao: cartaoPublico(cartao) });
 });
 
 app.post("/api/cartoes/pedido-credito", requireAuth, (req: AuthedRequest, res) => {
@@ -674,7 +707,7 @@ app.post("/api/cartoes/pedido-credito", requireAuth, (req: AuthedRequest, res) =
     estado: "PENDENTE_ATIVACAO",
   });
 
-  res.status(201).json({ status: "concluido", cartao });
+  res.status(201).json({ status: "concluido", cartao: cartaoPublico(cartao) });
 });
 
 app.post("/api/cartoes/:id/ativar-credito", requireAuth, (req: AuthedRequest, res) => {
@@ -695,7 +728,7 @@ app.post("/api/cartoes/:id/ativar-credito", requireAuth, (req: AuthedRequest, re
   }
 
   cartao.estado = "ATIVO";
-  res.status(200).json({ status: "concluido", cartao });
+  res.status(200).json({ status: "concluido", cartao: cartaoPublico(cartao) });
 });
 
 app.post("/api/cartoes/:id/cancelar", requireAuth, (req: AuthedRequest, res) => {
@@ -725,7 +758,7 @@ app.post("/api/cartoes/:id/cancelar", requireAuth, (req: AuthedRequest, res) => 
   }
 
   cartao.estado = "CANCELADO";
-  res.status(200).json({ status: "concluido", cartao });
+  res.status(200).json({ status: "concluido", cartao: cartaoPublico(cartao) });
 });
 
 // -----------------------------------------------------------------------

@@ -51,6 +51,8 @@ export interface Cartao {
   userId: string;
   contaId?: string; // conta associada (débito, ou conta de pagamento do crédito)
   numeroMascarado: string;
+  numeroCompleto: string; // só exposto pelo endpoint /dados-completos, com PIN
+  cvv: string; // idem — nunca vai na listagem geral de cartões
   titular: string;
   tipo: "DEBITO" | "CREDITO";
   validade: string; // MM/AA
@@ -141,6 +143,8 @@ async function criarTabelas() {
     userId TEXT NOT NULL,
     contaId TEXT,
     numeroMascarado TEXT NOT NULL,
+    numeroCompleto TEXT NOT NULL DEFAULT '',
+    cvv TEXT NOT NULL DEFAULT '',
     titular TEXT NOT NULL,
     tipo TEXT NOT NULL,
     validade TEXT NOT NULL,
@@ -148,6 +152,21 @@ async function criarTabelas() {
     limite REAL,
     saldoDevedor REAL
   )`);
+
+  // Migração para bases de dados criadas antes de existirem numeroCompleto/cvv
+  // (o CREATE TABLE IF NOT EXISTS acima não adiciona colunas a uma tabela já
+  // existente). Os cartões antigos ficam com valores vazios e são
+  // preenchidos automaticamente ao carregar — ver carregarDados().
+  for (const alterar of [
+    "ALTER TABLE cartoes ADD COLUMN numeroCompleto TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE cartoes ADD COLUMN cvv TEXT NOT NULL DEFAULT ''",
+  ]) {
+    try {
+      await db.execute(alterar);
+    } catch {
+      // a coluna já existe — ignora
+    }
+  }
 
   await db.execute(`CREATE TABLE IF NOT EXISTS movimentos_cartao (
     id TEXT PRIMARY KEY,
@@ -213,11 +232,18 @@ export async function carregarDados() {
     movimentos.push(linha);
   }
   for (const linha of linhasCartoes.rows as unknown as Cartao[]) {
+    // Cartões criados antes de existirem numeroCompleto/cvv ficam com
+    // valores vazios na base de dados — preenche-os aqui, de forma
+    // determinística a partir do próprio id do cartão.
+    const contadorCartao = Number(linha.id.slice(linha.id.lastIndexOf("_") + 1)) || 0;
+    const dadosGerados = gerarDadosCartao(contadorCartao, linha.numeroMascarado.slice(-4));
     cartoes.set(linha.id, {
       ...linha,
       contaId: linha.contaId ?? undefined,
       limite: linha.limite ?? undefined,
       saldoDevedor: linha.saldoDevedor ?? undefined,
+      numeroCompleto: linha.numeroCompleto || dadosGerados.numeroCompleto,
+      cvv: linha.cvv || dadosGerados.cvv,
     });
   }
   for (const linha of linhasMovimentosCartao.rows as unknown as MovimentoCartao[]) {
@@ -262,12 +288,14 @@ export async function guardarDados() {
         args: [m.id, m.contaId, m.data, m.descricao, m.valor, m.saldoApos],
       })),
       ...[...cartoes.values()].map((c) => ({
-        sql: "INSERT INTO cartoes (id, userId, contaId, numeroMascarado, titular, tipo, validade, estado, limite, saldoDevedor) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        sql: "INSERT INTO cartoes (id, userId, contaId, numeroMascarado, numeroCompleto, cvv, titular, tipo, validade, estado, limite, saldoDevedor) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         args: [
           c.id,
           c.userId,
           c.contaId ?? null,
           c.numeroMascarado,
+          c.numeroCompleto,
+          c.cvv,
           c.titular,
           c.tipo,
           c.validade,
@@ -297,6 +325,20 @@ export async function guardarDados() {
 export function gerarIban(): string {
   const numero = String(100000000000 + contaCounter).padStart(21, "0");
   return `PT50${numero}`;
+}
+
+/**
+ * Número e código de segurança fictícios de um cartão, determinísticos a
+ * partir do seu contador — não são números de cartão reais. Usado tanto na
+ * criação de um cartão novo como para preencher retroativamente cartões
+ * antigos que ainda não tinham estes campos (ver migração em criarTabelas).
+ */
+function gerarDadosCartao(contador: number, ultimosDigitos: string): { numeroCompleto: string; cvv: string } {
+  const blocoMeio = String(1000000 + contador * 6113).padStart(8, "0").slice(-8);
+  return {
+    numeroCompleto: `4000 ${blocoMeio.slice(0, 4)} ${blocoMeio.slice(4, 8)} ${ultimosDigitos}`,
+    cvv: String(100 + ((contador * 7919) % 900)),
+  };
 }
 
 export function criarUtilizador(data: {
@@ -351,6 +393,7 @@ export function criarCartao(data: {
 }): Cartao {
   const id = `cartao_${cartaoCounter}`;
   const ultimosDigitos = String(1000 + cartaoCounter).slice(-4);
+  const { numeroCompleto, cvv } = gerarDadosCartao(cartaoCounter, ultimosDigitos);
   cartaoCounter++;
 
   const cartao: Cartao = {
@@ -358,6 +401,8 @@ export function criarCartao(data: {
     userId: data.userId,
     contaId: data.contaId,
     numeroMascarado: `•••• •••• •••• ${ultimosDigitos}`,
+    numeroCompleto,
+    cvv,
     titular: data.titular,
     tipo: data.tipo,
     validade: data.validade,

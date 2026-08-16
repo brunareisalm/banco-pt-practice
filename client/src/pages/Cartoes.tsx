@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { api } from "../api";
-import type { Cartao } from "../api";
+import type { Cartao, DadosCompletosCartao } from "../api";
 import { useIdioma } from "../i18n/IdiomaContext";
 
 const ESTADO_CLASSE: Record<Cartao["estado"], string> = {
@@ -16,6 +16,12 @@ export default function Cartoes() {
   const [aCarregar, setACarregar] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [aAtualizar, setAAtualizar] = useState<string | null>(null);
+
+  const [cartaoDadosId, setCartaoDadosId] = useState<string | null>(null);
+  const [pinDados, setPinDados] = useState("");
+  const [aVerificarDados, setAVerificarDados] = useState(false);
+  const [erroDados, setErroDados] = useState<string | null>(null);
+  const [dadosRevelados, setDadosRevelados] = useState<DadosCompletosCartao | null>(null);
 
   useEffect(() => {
     carregar();
@@ -41,6 +47,39 @@ export default function Cartoes() {
       carregar();
     } finally {
       setAAtualizar(null);
+    }
+  }
+
+  function abrirVerDados(cartaoId: string) {
+    setCartaoDadosId(cartaoId);
+    setPinDados("");
+    setErroDados(null);
+    setDadosRevelados(null);
+  }
+
+  function ocultarDados() {
+    setCartaoDadosId(null);
+    setPinDados("");
+    setErroDados(null);
+    setDadosRevelados(null);
+  }
+
+  async function handleVerDados(e: FormEvent) {
+    e.preventDefault();
+    setErroDados(null);
+    setAVerificarDados(true);
+    try {
+      const dados = await api.obterDadosCompletosCartao(cartaoDadosId!, { pin: pinDados });
+      setDadosRevelados(dados);
+    } catch (err) {
+      const codigo = err instanceof Error ? err.message : "erro_desconhecido";
+      const mensagens: Record<string, string> = {
+        pin_invalido: dict.cartoes.pinInvalido,
+      };
+      setErroDados(mensagens[codigo] || dict.cartoes.erroGenerico);
+      setPinDados("");
+    } finally {
+      setAVerificarDados(false);
     }
   }
 
@@ -95,18 +134,80 @@ export default function Cartoes() {
               </span>
             </div>
 
-            {podeAlternarBloqueio && (
-              <button
-                data-testid="cartao-toggle-estado"
-                onClick={() => alternarEstado(cartao)}
-                disabled={aAtualizar === cartao.id}
-              >
-                {aAtualizar === cartao.id
-                  ? dict.cartoes.aAtualizar
-                  : cartao.estado === "ATIVO"
-                    ? dict.cartoes.bloquear
-                    : dict.cartoes.desbloquear}
-              </button>
+            <div className="cartao-acoes">
+              {podeAlternarBloqueio && (
+                <button
+                  data-testid="cartao-toggle-estado"
+                  onClick={() => alternarEstado(cartao)}
+                  disabled={aAtualizar === cartao.id}
+                >
+                  {aAtualizar === cartao.id
+                    ? dict.cartoes.aAtualizar
+                    : cartao.estado === "ATIVO"
+                      ? dict.cartoes.bloquear
+                      : dict.cartoes.desbloquear}
+                </button>
+              )}
+
+              {cartaoDadosId === cartao.id ? (
+                <button type="button" className="button-secundario" data-testid="cartao-dados-ocultar" onClick={ocultarDados}>
+                  {dict.cartoes.ocultarDados}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="button-secundario"
+                  data-testid="cartao-ver-dados"
+                  onClick={() => abrirVerDados(cartao.id)}
+                >
+                  {dict.cartoes.verDados}
+                </button>
+              )}
+            </div>
+
+            {cartaoDadosId === cartao.id && !dadosRevelados && (
+              <form className="cartao-dados-form" onSubmit={handleVerDados}>
+                <label htmlFor={`cartaoDadosPin-${cartao.id}`}>{dict.cartoes.pin}</label>
+                <input
+                  id={`cartaoDadosPin-${cartao.id}`}
+                  data-testid="cartao-dados-pin"
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={4}
+                  value={pinDados}
+                  onChange={(e) => setPinDados(e.target.value)}
+                  autoFocus
+                  required
+                />
+
+                {erroDados && (
+                  <p className="erro" data-testid="cartao-dados-mensagem">
+                    {erroDados}
+                  </p>
+                )}
+
+                <button type="submit" data-testid="cartao-dados-confirmar" disabled={aVerificarDados}>
+                  {aVerificarDados ? dict.cartoes.aVerificar : dict.cartoes.confirmar}
+                </button>
+              </form>
+            )}
+
+            {cartaoDadosId === cartao.id && dadosRevelados && (
+              <dl className="cartao-dados-revelados" data-testid="cartao-dados-revelados">
+                <div className="overlay-resumo-linha">
+                  <dt>{dict.cartoes.numeroCompleto}</dt>
+                  <dd data-testid="cartao-dados-numero">{dadosRevelados.numeroCompleto}</dd>
+                </div>
+                <div className="overlay-resumo-linha">
+                  <dt>{dict.cartoes.validade}</dt>
+                  <dd data-testid="cartao-dados-validade">{dadosRevelados.validade}</dd>
+                </div>
+                <div className="overlay-resumo-linha">
+                  <dt>{dict.cartoes.cvv}</dt>
+                  <dd data-testid="cartao-dados-cvv">{dadosRevelados.cvv}</dd>
+                </div>
+                <p className="hint">{dict.cartoes.avisoDados}</p>
+              </dl>
             )}
           </div>
         );

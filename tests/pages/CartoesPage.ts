@@ -23,6 +23,10 @@ export class CartoesPage {
     return this.cartao(id).getByTestId('cartao-toggle-estado');
   }
 
+  verDadosButton(id: string): Locator {
+    return this.cartao(id).getByTestId('cartao-ver-dados');
+  }
+
   async lerEstado(id: string): Promise<'ATIVO' | 'BLOQUEADO'> {
     const texto = await this.estado(id).innerText();
     return texto.trim() === 'Ativo' ? 'ATIVO' : 'BLOQUEADO';

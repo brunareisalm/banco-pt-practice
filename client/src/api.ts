@@ -138,6 +138,8 @@ export const api = {
     request(`/api/cartoes/${id}/ativar-credito`, { method: "POST", body: JSON.stringify(data) }),
   cancelarCartaoCredito: (id: string, data: { pin: string }): Promise<{ cartao: Cartao }> =>
     request(`/api/cartoes/${id}/cancelar`, { method: "POST", body: JSON.stringify(data) }),
+  obterDadosCompletosCartao: (id: string, data: { pin: string }): Promise<DadosCompletosCartao> =>
+    request(`/api/cartoes/${id}/dados-completos`, { method: "POST", body: JSON.stringify(data) }),
   listarAgendamentos: (): Promise<{ agendamentos: OperacaoAgendada[] }> => request("/api/agendamentos"),
   criarPoupanca: (): Promise<{ conta: Conta }> => request("/api/poupancas", { method: "POST" }),
   depositarPoupanca: (id: string, data: { contaOrigemId: string; valor: number; pin: string }) =>
@@ -167,6 +169,13 @@ export interface Cartao {
   estado: "ATIVO" | "BLOQUEADO" | "PENDENTE_ATIVACAO" | "CANCELADO";
   limite?: number;
   saldoDevedor?: number;
+}
+
+export interface DadosCompletosCartao {
+  titular: string;
+  numeroCompleto: string;
+  validade: string;
+  cvv: string;
 }
 
 export function setToken(token: string) {
