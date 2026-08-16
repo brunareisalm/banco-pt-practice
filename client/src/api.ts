@@ -119,8 +119,16 @@ export const api = {
   estadoMBWay: (): Promise<EstadoMBWay> => request("/api/mbway/estado"),
   ativarMBWay: (telefone: string): Promise<EstadoMBWay> =>
     request("/api/mbway/ativar", { method: "POST", body: JSON.stringify({ telefone }) }),
-  pagarMBWay: (data: { contaId: string; valor: number; descricao?: string; pin: string }) =>
-    request("/api/mbway/pagamentos", { method: "POST", body: JSON.stringify(data) }),
+  pagarMBWay: (data: {
+    contaId: string;
+    numeroDestino: string;
+    valor: number;
+    descricao?: string;
+    pin: string;
+  }) => request("/api/mbway/pagamentos", { method: "POST", body: JSON.stringify(data) }),
+  opcoesCarregamento: (): Promise<{ operadores: string[]; valores: number[] }> => request("/api/carregamentos/opcoes"),
+  carregarTelemovel: (data: { contaId: string; operador: string; numero: string; valor: number; pin: string }) =>
+    request("/api/carregamentos", { method: "POST", body: JSON.stringify(data) }),
   listarCartoes: (): Promise<{ cartoes: Cartao[] }> => request("/api/cartoes"),
   bloquearCartao: (id: string): Promise<{ cartao: Cartao }> =>
     request(`/api/cartoes/${id}/bloquear`, { method: "POST" }),

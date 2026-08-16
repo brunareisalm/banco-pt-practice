@@ -8,6 +8,7 @@ export class MBWayPage {
   readonly estado: Locator;
   readonly mudarNumeroButton: Locator;
   readonly contaSelect: Locator;
+  readonly numeroDestinoInput: Locator;
   readonly valorInput: Locator;
   readonly pinInput: Locator;
   readonly pagarSubmit: Locator;
@@ -21,6 +22,7 @@ export class MBWayPage {
     this.estado = page.getByTestId('mbway-estado');
     this.mudarNumeroButton = page.getByTestId('mbway-mudar-numero');
     this.contaSelect = page.getByTestId('mbway-conta');
+    this.numeroDestinoInput = page.getByTestId('mbway-numero-destino');
     this.valorInput = page.getByTestId('mbway-valor');
     this.pinInput = page.getByTestId('mbway-pin');
     this.pagarSubmit = page.getByTestId('mbway-submit');
@@ -80,7 +82,9 @@ export class MBWayPage {
     return Number(match[1].replace(/\./g, '').replace(',', '.'));
   }
 
-  async pagar(valor: string, pin: string) {
+  /** numeroDestino tem por omissão um número válido — passa outro só quando o teste precisar de o variar. */
+  async pagar(valor: string, pin: string, numeroDestino = '912345678') {
+    await this.numeroDestinoInput.fill(numeroDestino);
     await this.valorInput.fill(valor);
     await this.pinInput.fill(pin);
     await this.pagarSubmit.click();

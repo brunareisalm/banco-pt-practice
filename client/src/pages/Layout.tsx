@@ -135,8 +135,8 @@ export default function Layout() {
             )}
           </div>
 
-          <NavLink to="/mbway" data-testid="nav-mbway" onClick={fecharMenus}>
-            {dict.nav.mbway}
+          <NavLink to="/carregamentos" data-testid="nav-carregamentos" onClick={fecharMenus}>
+            {dict.nav.carregamentos}
           </NavLink>
 
           <div className="nav-dropdown">
@@ -152,6 +152,9 @@ export default function Layout() {
               <div className="nav-dropdown-menu nav-dropdown-menu--right" data-testid="nav-cartoes-menu">
                 <Link to="/cartoes" data-testid="nav-cartoes-dados" onClick={fecharMenus}>
                   {dict.nav.cartoesDados}
+                </Link>
+                <Link to="/mbway" data-testid="nav-cartoes-mbway" onClick={fecharMenus}>
+                  {dict.nav.mbway}
                 </Link>
                 <Link
                   to="/cartoes/pagar-credito"

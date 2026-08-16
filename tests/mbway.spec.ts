@@ -49,7 +49,7 @@ test.describe('BancoPT Practice - MB WAY', () => {
     const saldoAntes = await mbway.saldoConta();
     await mbway.pagar('12.34', DEMO_PIN);
 
-    await expect(mbway.mensagem).toHaveText('Pagamento MB WAY efetuado com sucesso.');
+    await expect(mbway.mensagem).toHaveText('Transferência MB WAY efetuada com sucesso.');
     // A mensagem de sucesso aparece antes do refetch de contas terminar — espera
     // o saldo mudar antes de o ler, tal como nos outros fluxos desta suite.
     await expect.poll(() => mbway.saldoConta()).not.toBe(saldoAntes);
@@ -65,7 +65,7 @@ test.describe('BancoPT Practice - MB WAY', () => {
     // um valor deliberadamente enorme garante saldo insuficiente em qualquer conta.
     await mbway.pagar('999999', DEMO_PIN);
 
-    await expect(mbway.mensagem).toHaveText('Saldo insuficiente para este pagamento.');
+    await expect(mbway.mensagem).toHaveText('Saldo insuficiente para esta transferência.');
   });
 
   test('deve rejeitar um PIN incorreto', async ({ page }) => {
@@ -75,6 +75,17 @@ test.describe('BancoPT Practice - MB WAY', () => {
     await mbway.pagar('5', '0000');
 
     await expect(mbway.mensagem).toHaveText('PIN incorreto.');
+  });
+
+  test('deve rejeitar um número de telemóvel de destino inválido', async ({ page }) => {
+    const mbway = new MBWayPage(page);
+    await mbway.garantirAtivo('935555555');
+
+    await mbway.pagar('5', DEMO_PIN, '212345678'); // não começa em 9
+
+    await expect(mbway.mensagem).toHaveText(
+      'Número inválido — indica um telemóvel português (9 dígitos, começado em 9).'
+    );
   });
 
   test('deve rejeitar um pagamento quando a carteira não está ativa (via API)', async ({ request }) => {

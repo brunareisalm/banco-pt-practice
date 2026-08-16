@@ -14,6 +14,7 @@ export default function MBWay() {
 
   const [contas, setContas] = useState<Conta[]>([]);
   const [contaId, setContaId] = useState("");
+  const [numeroDestino, setNumeroDestino] = useState("");
   const [valor, setValor] = useState("");
   const [descricao, setDescricao] = useState("");
   const [pin, setPin] = useState("");
@@ -57,8 +58,9 @@ export default function MBWay() {
     setMensagem(null);
     setAPagar(true);
     try {
-      await api.pagarMBWay({ contaId, valor: Number(valor), descricao: descricao || undefined, pin });
+      await api.pagarMBWay({ contaId, numeroDestino, valor: Number(valor), descricao: descricao || undefined, pin });
       setMensagem({ tipo: "sucesso", texto: dict.mbway.sucesso });
+      setNumeroDestino("");
       setValor("");
       setDescricao("");
       setPin("");
@@ -69,6 +71,7 @@ export default function MBWay() {
       const mensagens: Record<string, string> = {
         saldo_insuficiente: dict.mbway.saldoInsuficiente,
         valor_invalido: dict.mbway.valorInvalido,
+        numero_destino_invalido: dict.mbway.numeroDestinoInvalido,
         carteira_nao_ativa: dict.mbway.carteiraNaoAtiva,
         conta_nao_encontrada: dict.mbway.contaInvalida,
         pin_invalido: dict.mbway.pinInvalido,
@@ -144,6 +147,17 @@ export default function MBWay() {
                   </option>
                 ))}
               </select>
+
+              <label htmlFor="numeroDestinoMBWay">{dict.mbway.numeroDestino}</label>
+              <input
+                id="numeroDestinoMBWay"
+                data-testid="mbway-numero-destino"
+                value={numeroDestino}
+                onChange={(e) => setNumeroDestino(e.target.value)}
+                placeholder="912345678"
+                maxLength={9}
+                required
+              />
 
               <label htmlFor="valorMBWay">{dict.mbway.valor}</label>
               <input

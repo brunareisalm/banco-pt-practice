@@ -23,6 +23,7 @@ import Extratos from "./pages/Extratos";
 import NibIbanSwift from "./pages/NibIbanSwift";
 import OperacoesAgendadas from "./pages/OperacoesAgendadas";
 import SaldosMovimentos from "./pages/SaldosMovimentos";
+import Carregamentos from "./pages/Carregamentos";
 import Poupancas from "./pages/Poupancas";
 import Definicoes from "./pages/Definicoes";
 
@@ -68,6 +69,7 @@ function AppRoutes() {
         <Route path="/consultas/nib-iban-swift" element={<NibIbanSwift />} />
         <Route path="/consultas/operacoes-agendadas" element={<OperacoesAgendadas />} />
         <Route path="/mbway" element={<MBWay />} />
+        <Route path="/carregamentos" element={<Carregamentos />} />
         <Route path="/cartoes" element={<Cartoes />} />
         <Route path="/cartoes/pagar-credito" element={<PagarCartaoCredito />} />
         <Route path="/cartoes/aumento-limite" element={<AumentoLimite />} />

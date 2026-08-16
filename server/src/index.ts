@@ -506,12 +506,12 @@ app.post("/api/mbway/pagamentos", requireAuth, (req: AuthedRequest, res) => {
     return res.status(400).json({ error: "carteira_nao_ativa" });
   }
 
-  const { contaId, valor, descricao, pin } = req.body ?? {};
+  const { contaId, numeroDestino, valor, descricao, pin } = req.body ?? {};
 
-  if (!contaId || !valor || !pin) {
+  if (!contaId || !numeroDestino || !valor || !pin) {
     return res.status(400).json({
       error: "campos_obrigatorios",
-      message: "contaId, valor e pin são obrigatórios",
+      message: "contaId, numeroDestino, valor e pin são obrigatórios",
     });
   }
 
@@ -524,6 +524,10 @@ app.post("/api/mbway/pagamentos", requireAuth, (req: AuthedRequest, res) => {
     return res.status(404).json({ error: "conta_nao_encontrada" });
   }
 
+  if (!TELEFONE_MBWAY_REGEX.test(numeroDestino)) {
+    return res.status(400).json({ error: "numero_destino_invalido" });
+  }
+
   if (valor <= 0) {
     return res.status(400).json({ error: "valor_invalido" });
   }
@@ -532,7 +536,60 @@ app.post("/api/mbway/pagamentos", requireAuth, (req: AuthedRequest, res) => {
     return res.status(400).json({ error: "saldo_insuficiente" });
   }
 
-  registarMovimento(conta.id, descricao || "Pagamento MB WAY", -valor);
+  registarMovimento(conta.id, descricao || `Transferência MB WAY para ${numeroDestino}`, -valor);
+
+  res.status(201).json({ status: "concluido", novoSaldo: conta.saldo });
+});
+
+// -----------------------------------------------------------------------
+// Carregamentos de telemóvel
+// -----------------------------------------------------------------------
+
+const OPERADORES_CARREGAMENTO = ["MEO", "NOS", "Vodafone", "Lycamobile", "Digi", "UZO"];
+const VALORES_CARREGAMENTO = [5, 10, 15, 20, 30, 50];
+const TELEFONE_CARREGAMENTO_REGEX = /^9\d{8}$/;
+
+app.get("/api/carregamentos/opcoes", requireAuth, (_req, res) => {
+  res.json({ operadores: OPERADORES_CARREGAMENTO, valores: VALORES_CARREGAMENTO });
+});
+
+app.post("/api/carregamentos", requireAuth, (req: AuthedRequest, res) => {
+  const { contaId, operador, numero, valor, pin } = req.body ?? {};
+
+  if (!contaId || !operador || !numero || !valor || !pin) {
+    return res.status(400).json({
+      error: "campos_obrigatorios",
+      message: "contaId, operador, numero, valor e pin são obrigatórios",
+    });
+  }
+
+  const utilizador = users.get(req.userId!);
+  if (!utilizador || pin !== utilizador.pin) {
+    return res.status(400).json({ error: "pin_invalido" });
+  }
+
+  const conta = contas.get(contaId);
+  if (!conta || conta.userId !== req.userId) {
+    return res.status(404).json({ error: "conta_nao_encontrada" });
+  }
+
+  if (!OPERADORES_CARREGAMENTO.includes(operador)) {
+    return res.status(400).json({ error: "operador_invalido" });
+  }
+
+  if (!TELEFONE_CARREGAMENTO_REGEX.test(numero)) {
+    return res.status(400).json({ error: "numero_invalido" });
+  }
+
+  if (!VALORES_CARREGAMENTO.includes(valor)) {
+    return res.status(400).json({ error: "valor_invalido" });
+  }
+
+  if (conta.saldo < valor) {
+    return res.status(400).json({ error: "saldo_insuficiente" });
+  }
+
+  registarMovimento(conta.id, `Carregamento ${operador} - ${numero}`, -valor);
 
   res.status(201).json({ status: "concluido", novoSaldo: conta.saldo });
 });
