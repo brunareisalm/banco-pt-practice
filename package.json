@@ -1,0 +1,20 @@
+{
+  "name": "banco-pt-practice",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Banco fictício em português para praticar testes de login, navegação e transferências. Backend Node/Express + frontend React, pronto a envolver com Capacitor para gerar apps Android/iOS mais tarde.",
+  "scripts": {
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "dev": "concurrently -n SERVER,CLIENT -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
+    "db:reset": "npm run db:reset --prefix server",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0",
+    "concurrently": "^8.2.2"
+  }
+}
