@@ -18,6 +18,7 @@ interface AuthContextValue {
     telefone: string;
   }) => Promise<void>;
   logout: () => void;
+  atualizarNome: (nomeCompleto: string) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -51,8 +52,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthenticated(false);
   }
 
+  function atualizarNome(nomeCompleto: string) {
+    setUser((atual) => (atual ? { ...atual, nomeCompleto } : atual));
+  }
+
   return (
-    <AuthContext.Provider value={{ user, authenticated, login, registo, logout }}>
+    <AuthContext.Provider value={{ user, authenticated, login, registo, logout, atualizarNome }}>
       {children}
     </AuthContext.Provider>
   );

@@ -60,6 +60,58 @@ test.describe('BancoPT Practice - Definições', () => {
     });
   });
 
+  test.describe('Alterar Nome', () => {
+    test('deve rejeitar a alteração do nome da conta demo', async ({ page }) => {
+      const loginPage = new LoginPage(page);
+      await loginPage.goto();
+      await loginPage.login(DEMO_USERNAME, DEMO_PASSWORD);
+      await page.getByTestId('nav-definicoes').click();
+
+      await page.getByTestId('definicoes-nome-input').fill('Outro Nome');
+      await page.getByTestId('definicoes-nome-submit').click();
+
+      await expect(page.getByTestId('definicoes-nome-mensagem')).toHaveText(
+        'O nome da conta de demonstração não pode ser alterado.'
+      );
+      await expect(page.getByTestId('user-nome')).not.toHaveText('Outro Nome');
+    });
+
+    test('deve rejeitar um nome demasiado curto', async ({ page, request }) => {
+      const { username, password } = await registarUtilizadorNovo(request);
+      const loginPage = new LoginPage(page);
+      await loginPage.goto();
+      await loginPage.login(username, password);
+      await page.getByTestId('nav-definicoes').click();
+
+      await page.getByTestId('definicoes-nome-input').fill('A');
+      await page.getByTestId('definicoes-nome-submit').click();
+
+      await expect(page.getByTestId('definicoes-nome-mensagem')).toHaveText(
+        'O nome deve ter entre 2 e 80 caracteres.'
+      );
+    });
+
+    test('deve alterar o nome com sucesso e refletir no cabeçalho e na saudação inicial', async ({
+      page,
+      request,
+    }) => {
+      const { username, password } = await registarUtilizadorNovo(request);
+      const loginPage = new LoginPage(page);
+      await loginPage.goto();
+      await loginPage.login(username, password);
+      await page.getByTestId('nav-definicoes').click();
+
+      await page.getByTestId('definicoes-nome-input').fill('Maria da Silva');
+      await page.getByTestId('definicoes-nome-submit').click();
+
+      await expect(page.getByTestId('definicoes-nome-mensagem')).toHaveText('Nome alterado com sucesso.');
+      await expect(page.getByTestId('user-nome')).toHaveText('Maria da Silva');
+
+      await page.getByTestId('nav-inicio').click();
+      await expect(page.getByRole('heading', { name: 'Olá, Maria da Silva' })).toBeVisible();
+    });
+  });
+
   test.describe('Alterar Password', () => {
     test('deve rejeitar a alteração da password da conta demo', async ({ page }) => {
       const loginPage = new LoginPage(page);

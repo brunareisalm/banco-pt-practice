@@ -897,4 +897,32 @@ app.post("/api/definicoes/pin", requireAuth, (req: AuthedRequest, res) => {
   res.status(200).json({ status: "concluido" });
 });
 
+app.post("/api/definicoes/nome", requireAuth, (req: AuthedRequest, res) => {
+  const { nomeCompleto } = req.body ?? {};
+
+  if (!nomeCompleto) {
+    return res.status(400).json({
+      error: "campos_obrigatorios",
+      message: "nomeCompleto é obrigatório",
+    });
+  }
+
+  const user = users.get(req.userId!);
+  if (!user) return res.status(404).json({ error: "utilizador_nao_encontrado" });
+
+  // O nome da conta de demonstração é partilhado nas instruções do README —
+  // tem de continuar reconhecível para quem seguir esse guia.
+  if (user.username === "demo") {
+    return res.status(403).json({ error: "conta_demo_nome_protegido" });
+  }
+
+  const nomeLimpo = nomeCompleto.trim();
+  if (nomeLimpo.length < 2 || nomeLimpo.length > 80) {
+    return res.status(400).json({ error: "nome_invalido" });
+  }
+
+  user.nomeCompleto = nomeLimpo;
+  res.status(200).json({ status: "concluido", nomeCompleto: user.nomeCompleto });
+});
+
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));

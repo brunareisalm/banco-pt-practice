@@ -158,6 +158,8 @@ export const api = {
     request(`/api/poupancas/${id}/excluir`, { method: "POST", body: JSON.stringify(data) }),
   alterarPin: (data: { pinAtual: string; pinNovo: string; confirmarPinNovo: string }) =>
     request("/api/definicoes/pin", { method: "POST", body: JSON.stringify(data) }),
+  alterarNome: (data: { nomeCompleto: string }): Promise<{ status: string; nomeCompleto: string }> =>
+    request("/api/definicoes/nome", { method: "POST", body: JSON.stringify(data) }),
   alterarPassword: (data: { passwordAtual: string; passwordNova: string; confirmarPasswordNova: string }) =>
     request("/api/definicoes/password", { method: "POST", body: JSON.stringify(data) }),
 };

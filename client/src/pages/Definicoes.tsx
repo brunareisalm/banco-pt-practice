@@ -1,10 +1,16 @@
 import { type FormEvent, useState } from "react";
 import { api } from "../api";
+import { useAuth } from "../context/AuthContext";
 import { useIdioma } from "../i18n/IdiomaContext";
 import type { Idioma } from "../i18n/translations";
 
 export default function Definicoes() {
   const { idioma, setIdioma, dict } = useIdioma();
+  const { user, atualizarNome } = useAuth();
+
+  const [nomeCompleto, setNomeCompleto] = useState(user?.nomeCompleto ?? "");
+  const [mensagemNome, setMensagemNome] = useState<{ tipo: "sucesso" | "erro"; texto: string } | null>(null);
+  const [aGuardarNome, setAGuardarNome] = useState(false);
 
   const [passwordAtual, setPasswordAtual] = useState("");
   const [passwordNova, setPasswordNova] = useState("");
@@ -22,6 +28,27 @@ export default function Definicoes() {
 
   function selecionarIdioma(novoIdioma: Idioma) {
     setIdioma(novoIdioma);
+  }
+
+  async function handleSubmitNome(e: FormEvent) {
+    e.preventDefault();
+    setMensagemNome(null);
+    setAGuardarNome(true);
+    try {
+      const resultado = await api.alterarNome({ nomeCompleto });
+      atualizarNome(resultado.nomeCompleto);
+      setNomeCompleto(resultado.nomeCompleto);
+      setMensagemNome({ tipo: "sucesso", texto: dict.definicoes.nomeSucesso });
+    } catch (err) {
+      const codigo = err instanceof Error ? err.message : "erro_desconhecido";
+      const mensagens: Record<string, string> = {
+        conta_demo_nome_protegido: dict.definicoes.nomeContaDemoProtegida,
+        nome_invalido: dict.definicoes.nomeInvalido,
+      };
+      setMensagemNome({ tipo: "erro", texto: mensagens[codigo] || dict.definicoes.erroGenerico });
+    } finally {
+      setAGuardarNome(false);
+    }
   }
 
   async function handleSubmitPassword(e: FormEvent) {
@@ -79,7 +106,7 @@ export default function Definicoes() {
     <div className="page">
       <h2>{dict.definicoes.titulo}</h2>
 
-      <div className="card">
+      <div className="card card-form">
         <h3>{dict.definicoes.idioma}</h3>
         <div className="idioma-opcoes">
           <button
@@ -99,6 +126,34 @@ export default function Definicoes() {
             🇬🇧 {dict.definicoes.ingles}
           </button>
         </div>
+      </div>
+
+      <div className="card card-form">
+        <h3>{dict.definicoes.alterarNome}</h3>
+        <form onSubmit={handleSubmitNome}>
+          <label htmlFor="nomeCompletoInput">{dict.definicoes.novoNome}</label>
+          <input
+            id="nomeCompletoInput"
+            data-testid="definicoes-nome-input"
+            value={nomeCompleto}
+            onChange={(e) => setNomeCompleto(e.target.value)}
+            maxLength={80}
+            required
+          />
+
+          {mensagemNome && (
+            <p
+              className={mensagemNome.tipo === "erro" ? "erro" : "sucesso"}
+              data-testid="definicoes-nome-mensagem"
+            >
+              {mensagemNome.texto}
+            </p>
+          )}
+
+          <button type="submit" data-testid="definicoes-nome-submit" disabled={aGuardarNome}>
+            {aGuardarNome ? dict.definicoes.aGuardar : dict.definicoes.guardar}
+          </button>
+        </form>
       </div>
 
       <div className="card card-form">
