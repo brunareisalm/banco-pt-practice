@@ -7,3 +7,4 @@ ios/
 playwright-report/
 test-results/
 server/data/
+DB token.txt

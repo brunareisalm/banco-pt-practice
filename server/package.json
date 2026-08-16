@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "start": "ts-node src/index.ts",
-    "db:reset": "node -e \"require('fs').rmSync(require('path').join(__dirname, 'data', 'banco.db'), { force: true })\""
+    "db:reset": "ts-node src/reset-db.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
