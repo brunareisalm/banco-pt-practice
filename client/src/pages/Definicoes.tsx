@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { api } from "../api";
 import { useIdioma } from "../i18n/IdiomaContext";
 import type { Idioma } from "../i18n/translations";

@@ -801,4 +801,16 @@ export const translations = {
   },
 } as const;
 
-export type Dicionario = (typeof translations)["pt"];
+// As traduções usam `as const` para o autocomplete das chaves, o que também
+// fixa cada string como o seu literal exato (ex.: "Início"). O dicionário
+// alarga esses literais de volta para `string`, para o bloco "en" (que tem
+// os mesmos textos, mas diferentes) também servir para o mesmo tipo.
+type Alargar<T> = T extends string
+  ? string
+  : T extends (...args: infer A) => infer R
+    ? (...args: A) => R
+    : T extends object
+      ? { [K in keyof T]: Alargar<T[K]> }
+      : T;
+
+export type Dicionario = Alargar<(typeof translations)["pt"]>;

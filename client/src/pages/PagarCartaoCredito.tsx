@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { api } from "../api";
 import type { Cartao, Conta } from "../api";
 import { useIdioma } from "../i18n/IdiomaContext";
