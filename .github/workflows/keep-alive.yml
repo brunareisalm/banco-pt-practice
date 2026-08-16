@@ -1,0 +1,21 @@
+name: Manter o backend acordado
+
+# O Render adormece o serviço grátis ao fim de 15 min sem tráfego, e o
+# primeiro pedido a seguir demora 30-60s a "acordar". Isto faz ping ao
+# endpoint de saúde a cada 10 minutos, para nunca passar tanto tempo parado.
+#
+# Nota: o GitHub desativa automaticamente workflows agendados depois de 60
+# dias sem nenhum commit no repositório — se isso acontecer, basta reativar
+# manualmente na aba "Actions" do repositório.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping ao /api/health do backend
+        run: curl -sf https://banco-pt-practice.onrender.com/api/health
