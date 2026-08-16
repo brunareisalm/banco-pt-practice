@@ -28,6 +28,7 @@ export default function Inicio() {
     { slug: "transferencia", label: dict.nav.transferir, icone: "🔁", to: "/transferencia" },
     { slug: "pagamentos", label: dict.nav.pagamentos, icone: "🧾", to: "/pagamentos" },
     { slug: "mbway", label: dict.nav.mbway, icone: "📱", to: "/mbway" },
+    { slug: "carregamentos", label: dict.nav.carregamentos, icone: "📶", to: "/carregamentos" },
     { slug: "cartoes", label: dict.nav.cartoes, icone: "🪪", to: "/cartoes" },
   ];
 

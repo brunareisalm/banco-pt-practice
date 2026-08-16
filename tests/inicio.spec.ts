@@ -25,12 +25,18 @@ test.describe('BancoPT Practice - Página Inicial', () => {
     await expect(page.getByTestId('acesso-rapido-transferencia')).toBeVisible();
     await expect(page.getByTestId('acesso-rapido-pagamentos')).toBeVisible();
     await expect(page.getByTestId('acesso-rapido-mbway')).toBeVisible();
+    await expect(page.getByTestId('acesso-rapido-carregamentos')).toBeVisible();
     await expect(page.getByTestId('acesso-rapido-cartoes')).toBeVisible();
   });
 
   test('deve navegar para MB WAY a partir do acesso rápido', async ({ page }) => {
     await page.getByTestId('acesso-rapido-mbway').click();
     await expect(page).toHaveURL(/\/mbway$/);
+  });
+
+  test('deve navegar para Carregamentos a partir do acesso rápido', async ({ page }) => {
+    await page.getByTestId('acesso-rapido-carregamentos').click();
+    await expect(page).toHaveURL(/\/carregamentos$/);
   });
 
   test('deve navegar para Cartões a partir do acesso rápido', async ({ page }) => {
