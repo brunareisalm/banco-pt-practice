@@ -775,18 +775,40 @@ button:disabled {
    revela a mesma navegação empilhada verticalmente por baixo da topbar. */
 
 @media (max-width: 900px) {
+  /* Grid de 3 colunas em vez do flex space-between do desktop: garante que
+     o nome do banco fica mesmo centrado, independentemente da largura do
+     hambúrguer à esquerda e da área de utilizador à direita. */
+  .topbar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    column-gap: 12px;
+    flex-wrap: nowrap;
+  }
+
   .menu-hamburguer {
     display: inline-flex;
-    order: 1;
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .logo-small {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
+    text-align: center;
   }
 
   .user-area {
-    order: 2;
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
   }
 
   .topnav {
     display: none;
-    order: 3;
+    grid-column: 1 / -1;
+    grid-row: 2;
     flex-direction: column;
     align-items: stretch;
     width: 100%;
